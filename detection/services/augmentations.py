@@ -52,3 +52,10 @@ def get_val_augmentation():
         A.Normalize(),
     ]
     return A.Compose(val_transform, bbox_params=A.BboxParams(format='pascal_voc', label_fields=['category_ids']))
+
+def get_infer_augmentation():
+    infer_transform = [
+        A.Resize(width=640, height=480),
+        A.Normalize(),
+    ]
+    return A.Compose(infer_transform)

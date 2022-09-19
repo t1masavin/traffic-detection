@@ -7,6 +7,59 @@ import torch
 import cv2
 import os
 
+
+class InferImages:
+    '''
+    Image preprocessing class with FIFO
+
+    ...
+
+    Attributes
+    ----------
+    batch_size: int
+        image batch size
+    transforms: albumentations.Compose
+        image transformations.
+
+    Methods
+    -------
+    append:
+        Adding an element to the beginning of a collection
+    __call__:
+        Pop batched elements 
+    
+    '''
+    def __init__(self, batch_size, transforms = None):
+        self.batch_size = batch_size
+        self.transforms = transforms()
+        self.collection = list()
+
+    def append(self, item):
+        assert isinstance(item, list), 'TypeError! The element must be a list.'
+        self.collection.extend(item)
+
+    def __call__(self):
+        len_collection = len(self.collection)
+        assert len_collection >= 1, 'Empty Collection! You should add items before the calling.'
+        if len_collection > self.batch_size:
+            len_collection = self.batch_size
+        list_images = self.collection[-len_collection:]
+        del self.collection[-len_collection:]
+        list_images = [self.__read_image(img_path) for img_path in list_images]
+        return torch.stack(list_images)
+
+    def __read_image(self, img_path):
+        img = cv2.imread(img_path)
+        img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
+        if self.transforms is not None:
+            img = self.transforms(image=img)['image']
+        img = self.__to_torch(img)
+        return img
+    
+    def __to_torch(self, img):
+        return torch.as_tensor(img).float().permute(2,0,1)
+
+
 class DetectionDataset(Dataset):
     def __init__(self, data, names, root, transforms = None):
         self.data = data
