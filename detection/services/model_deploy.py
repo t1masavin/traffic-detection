@@ -1,9 +1,12 @@
+import argparse
+import os
+
 import torch
 from torchvision.models.detection import fasterrcnn_resnet50_fpn_v2
 from torchvision.models.detection.faster_rcnn import FastRCNNPredictor
+
 from model import FasterRCNN
-import os
-import argparse
+
 
 def to_script(n_classes, checkpoint_path, save_path):
     det_model = FasterRCNN(n_classes)
@@ -17,13 +20,14 @@ def to_script(n_classes, checkpoint_path, save_path):
     in_features = detector.roi_heads.box_predictor.cls_score.in_features
     detector.roi_heads.box_predictor = FastRCNNPredictor(in_features, n_classes)
 
-    st_dict = {key.removeprefix('detector.') : value for key, value in st_dict.items()}
+    st_dict = {key.removeprefix('detector.'): value for key, value in st_dict.items()}
     detector.load_state_dict(st_dict)
     detector.eval()
     traced_model = torch.jit.script(detector)
     path = os.path.join(save_path, 'model.pt')
-    #traced_model([images]) input: list of images with shape(C, H, W)
+    # traced_model([images]) input: list of images with shape(C, H, W)
     traced_model.save(path)
+
 
 def parse_args():
     """Parse input arguments."""
@@ -31,7 +35,7 @@ def parse_args():
     parser.add_argument(
         '--n_classes',
         help='Number of detection classes.',
-        type=str,
+        type=int,
         default=3
     )
     parser.add_argument(
@@ -51,9 +55,10 @@ def parse_args():
     args = parser.parse_args()
     return args
 
+
 if __name__ == '__main__':
-  args = parse_args()
-  n_classes = args.n_classes
-  checkpoint_path = args.checkpoint_path
-  save_path = args.save_path
-  to_script(n_classes, checkpoint_path, save_path)
+    args = parse_args()
+    n_classes = args.n_classes + 1
+    checkpoint_path = args.checkpoint_path
+    save_path = args.save_path
+    to_script(n_classes, checkpoint_path, save_path)

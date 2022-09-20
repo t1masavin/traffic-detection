@@ -1,9 +1,10 @@
 import albumentations as A
 
+
 def get_training_augmentation():
     train_transform = [
 
-        A.GaussNoise (p=0.2),
+        A.GaussNoise(p=0.2),
         A.PadIfNeeded(min_height=640, min_width=640, always_apply=True, border_mode=0),
 
         A.OneOf([
@@ -43,7 +44,10 @@ def get_training_augmentation():
         ),
         A.Normalize(),
     ]
-    return A.Compose(train_transform, bbox_params=A.BboxParams(format='pascal_voc', label_fields=['category_ids'], min_visibility=0.5))
+    return A.Compose(
+        train_transform, bbox_params=A.BboxParams(
+            format='pascal_voc', label_fields=['category_ids'],
+            min_visibility=0.5))
 
 
 def get_val_augmentation():
@@ -52,6 +56,7 @@ def get_val_augmentation():
         A.Normalize(),
     ]
     return A.Compose(val_transform, bbox_params=A.BboxParams(format='pascal_voc', label_fields=['category_ids']))
+
 
 def get_infer_augmentation():
     infer_transform = [
