@@ -58,7 +58,7 @@ def parse_args():
 
 if __name__ == '__main__':
     args = parse_args()
-    n_classes = args.n_classes + 1
+    n_classes = args.n_classes
     checkpoint_path = args.checkpoint_path
     save_path = args.save_path
     to_script(n_classes, checkpoint_path, save_path)

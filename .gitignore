@@ -1,5 +1,0 @@
-FullIJCNN2013
-lightning_logs
-detection/services/__pycache__
-detection/__pycache__
-.gitignore

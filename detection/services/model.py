@@ -32,7 +32,7 @@ class InferImages:
 
     def __init__(self, batch_size, transforms=None):
         self.batch_size = batch_size
-        self.transforms = transforms()
+        self.transforms = transforms
         self.collection = list()
 
     def append(self, item):
@@ -47,18 +47,17 @@ class InferImages:
         list_images = self.collection[-len_collection:]
         del self.collection[-len_collection:]
         list_images = [self.__read_image(img_path) for img_path in list_images]
-        return torch.stack(list_images)
+        return list_images
 
     def __read_image(self, img_path):
         img = cv2.imread(img_path)
-        img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
         if self.transforms is not None:
             img = self.transforms(image=img)['image']
         img = self.__to_torch(img)
         return img
 
     def __to_torch(self, img):
-        return torch.as_tensor(img).float().permute(2, 0, 1)
+        return torch.as_tensor(img).permute(2, 0, 1).float() / 255.
 
 
 class DetectionDataset(Dataset):
@@ -72,8 +71,7 @@ class DetectionDataset(Dataset):
         name = self.names[idx]
         df = self.data[self.data['image'] == name]
         img_path = os.path.join(self.root, name)
-        img = cv2.imread(img_path)
-        img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
+        img = cv2.imread(img_path) / 255.
 
         bboxes = []
         labels = []
@@ -89,8 +87,8 @@ class DetectionDataset(Dataset):
         target = {}
         target["boxes"] = torch.as_tensor(bboxes, dtype=torch.float)
         target["labels"] = torch.as_tensor(labels, dtype=torch.int64)
-        img = torch.as_tensor(img).float().permute(2, 0, 1)
-        return img, target
+        img = torch.as_tensor(img).permute(2, 0, 1) 
+        return img.float(), target
 
     def __len__(self):
         return len(self.names)
