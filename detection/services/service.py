@@ -1,4 +1,5 @@
 import cv2
+import pandas as pd
 import matplotlib.pyplot as plt
 
 BOX_COLOR = (255, 0, 0)  # Red
@@ -39,3 +40,47 @@ def visualize(image, bboxes, category_ids, category_id_to_name=None, category_id
     plt.figure(figsize=(10, 6))
     plt.axis('off')
     plt.imshow(img, aspect='auto')
+
+
+def get_image(data, index):
+    bbox_1 = data.iloc[index]['xmin'], data.iloc[index]['ymin'], data.iloc[index]['xmax'], data.iloc[index]['ymax']
+    im = cv2.imread(data.iloc[index]["image"])
+    im = cv2.cvtColor(im, cv2.COLOR_RGB2BGR)
+    return im, bbox_1
+
+
+def convertFromJson(data):
+    data_list, data2_list = [], []
+    data = data[data['region_count'] != 0]
+    search_values = ['Name', 'Type']
+    data = data[data.region_attributes.str.contains('|'.join(search_values ))]
+    data = data.reset_index()
+    for row in range(data.shape[0]):
+        try:
+            data1 = eval(data['region_shape_attributes'][row])
+            data2 = eval(data['region_attributes'][row])
+            data_list.append(data1)
+            data2_list.append(data2)
+        except:
+            continue
+    datadf = pd.DataFrame(data_list)
+    datadf2 = pd.DataFrame(data2_list)
+    data = pd.concat([data, datadf, datadf2],1)[['filename','height','width','x','y', 'Name', 'Type']]
+    data['Name'] = data['Name'].apply(lambda x: str(x).split('\n')[0])
+    return data
+
+
+def convertToXYmax(data):
+    data_x2, data_y2 = [], []
+    for row in range(data.shape[0]):
+        data1 = data['x'][row] + data['width'][row]
+        data2 = data['y'][row] + data['height'][row]
+        data_x2.append(data1)
+        data_y2.append(data2)
+    datadf = pd.DataFrame(data_x2, columns=['xmax'])
+    datadf2 = pd.DataFrame(data_y2, columns=['ymax'])
+    data = pd.concat([data, datadf, datadf2],1)
+    data = data.drop(columns=['height', 'width'])
+    data.rename(columns={'filename': "image", 'x': "xmin", 'y': "ymin", 'Name': 'name', 'Type': 'class'}, inplace=True)
+    data = data[['image', 'xmin', 'ymin', 'xmax', 'ymax', 'name', 'class']]
+    return data
