@@ -54,7 +54,7 @@ def convertFromJson(data):
     data = data[data['region_count'] != 0]
     search_values = ['Name', 'Type']
     data = data[data.region_attributes.str.contains('|'.join(search_values ))]
-    data = data.reset_index()
+    data = data.reset_index(drop=True)
     for row in range(data.shape[0]):
         try:
             data1 = eval(data['region_shape_attributes'][row])
@@ -62,10 +62,17 @@ def convertFromJson(data):
             data_list.append(data1)
             data2_list.append(data2)
         except:
+            data.drop([row], inplace=True)
             continue
+    data = data.reset_index(drop=True)
     datadf = pd.DataFrame(data_list)
     datadf2 = pd.DataFrame(data2_list)
+    print(datadf.columns)
+    print(datadf2.columns)
+    ##################################################################################################
     data = pd.concat([data, datadf, datadf2],1)[['filename','height','width','x','y', 'Name', 'Type']]
+    ##################################################################################################
+    # data = pd.concat([datadf, datadf2],1)[['filename','height','width','x','y', 'Name', 'Type']]
     data['Name'] = data['Name'].apply(lambda x: str(x).split('\n')[0])
     return data
 
