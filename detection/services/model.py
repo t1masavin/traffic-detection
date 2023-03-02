@@ -88,7 +88,7 @@ class DetectionDataset(Dataset):
         target["boxes"] = torch.as_tensor(bboxes, dtype=torch.float)
         target["labels"] = torch.as_tensor(labels, dtype=torch.int64)
         img = torch.as_tensor(img).permute(2, 0, 1) 
-        return img.float(), target
+        return img.to(torch.float16), target
 
     def __len__(self):
         return len(self.names)
@@ -114,7 +114,7 @@ class FasterRCNN(LightningModule):
     def configure_optimizers(self):
         optimizer = torch.optim.Adam(self.parameters(), lr=self.lr)
         scheduler = {'scheduler': torch.optim.lr_scheduler.ReduceLROnPlateau(
-            optimizer=optimizer, mode='min', factor=0.7, patience=7), 'monitor': 'train_loss_step', }
+            optimizer=optimizer, mode='min', factor=0.3, patience=3), 'monitor': 'train_loss_step', }
         return {
             "optimizer": optimizer,
             "lr_scheduler": scheduler,
